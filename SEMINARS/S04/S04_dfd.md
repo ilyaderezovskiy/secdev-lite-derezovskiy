@@ -1,7 +1,4 @@
-# S04 - DFD (шаблон)
-
-Этот файл - **шаблон минимальной DFD** для семинара S04.
-Скопируйте и ведите у себя в репозитории в: `SEMINARS/S04/S04_dfd.md`.
+# S04 - DFD
 
 **Задача:** за 15-20 минут построить **понятную DFD** уровня сервиса (3-5 узлов) с явными **границами доверия** и подписями ключевых **потоков данных**. Эту DFD вы далее используете в `S04_stride_matrix_template.md` для STRIDE per element и приоритизации **L×I (1-5)**.
 
@@ -26,35 +23,42 @@
 flowchart LR
   %% --- Trust boundaries (по контурам) ---
   subgraph Internet[Интернет / Внешние клиенты]
-    U[Клиент/Браузер/Интеграция]
+    U[Клиент/Браузер]
   end
 
   subgraph Service[Сервис - приложение]
-    A[API Gateway / Controller]
-    S[Сервис / Бизнес-логика]
-    D[База данных]
+    A[API Gateway]
+    S1[Search Service]
+    S2[Profile Service]
+    D[(Database)]
   end
 
-  subgraph External[Внешние провайдеры]
-    X[External API / Payment]
+  subgraph External[Внешние системы]
+    ES[Search Index API]
   end
 
-  %% --- Основные потоки ---
-  U -- "JWT/HTTPS [NFR: AuthN, RateLimit]" --> A
-  A -->|"DTO / Requests"| S
-  S -->|"SQL/ORM [NFR: Data-Integrity]"| D
-  S -->|"HTTP/gRPC [timeouts/retry, NFR]"| X
-
-  %% --- Дополнительно (опционально) ---
-  %% Q[(Очередь/Шина)]:::opt
-  %% S -->|"event"| Q
+  %% --- Основные потоки поиска ---
+  U -- "HTTPS / Search Query<br>[NFR-004: RateLimiting]" --> A
+  A -- "DTO / Search Request<br>[NFR-006: Observability/Logging]" --> S1
+  S1 -- "HTTP / Search Query<br>[NFR-005: Timeouts/Retry/CircuitBreaker]" --> ES
+  ES -- "JSON / Search Results" --> S1
+  S1 -- "SQL / Metadata<br>[NFR-008: Data-Integrity]" --> D
+  
+  %% --- Основные потоки профиля ---
+  U -- "HTTPS / PII Data<br>[NFR-007: Privacy/PII]" --> A
+  A -- "DTO / Profile Data<br>[NFR-010: Observability/Logging]" --> S2
+  S2 -- "SQL / PII Storage<br>[NFR-007: Privacy/PII, NFR-008: Data-Integrity]" --> D
+  S2 -- "SQL / Auth Check<br>[NFR-009: Security-AuthZ/RBAC]" --> D
 
   %% --- Оформление границ ---
   classDef boundary fill:#f6f6f6,stroke:#999,stroke-width:1px;
   class Internet,Service,External boundary;
 
-  %% --- Стиль для опциональных элементов (если включите) ---
-  classDef opt fill:#fafafa,stroke:#bbb,stroke-dasharray: 3 2;
+  %% --- Стили для разных сервисов ---
+  classDef search fill:#e1f5fe,stroke:#01579b;
+  classDef profile fill:#e8f5e8,stroke:#1b5e20;
+  class S1 search;
+  class S2 profile;
 ```
 
 ---
@@ -93,10 +97,10 @@ flowchart LR
 
 ## Самопроверка (быстро)
 
-* [ ] **3-5 узлов**, не больше.
-* [ ] Границы доверия видимы и логичны.
-* [ ] На рёбрах есть **типы данных** и пометки `[NFR: …]`.
-* [ ] Ясно, где появляются `PII`, `JWT`, `file`, `payment`.
-* [ ] Понятно, какие элементы/потоки пойдут в STRIDE и L×I (1-5).
+* [+] **3-5 узлов**, не больше.
+* [+] Границы доверия видимы и логичны.
+* [+] На рёбрах есть **типы данных** и пометки `[NFR: …]`.
+* [+] Ясно, где появляются `PII`, `JWT`, `file`, `payment`.
+* [+] Понятно, какие элементы/потоки пойдут в STRIDE и L×I (1-5).
 
 ---
