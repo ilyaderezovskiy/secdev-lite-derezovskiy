@@ -10,8 +10,9 @@
 
 ## 1) Архитектура и границы доверия (TM1, S04)
 
-- **Роли/активы:** пользователь, админ; ПДн, JWT-токены, платёжные данные
-- **Зоны доверия:** Internet / DMZ / Internal / Device
+- **Роли:** пользователь (выполняет поисковые запросы и управляет профилем), админ (имеет доступ к панели мониторинга и управлению профилями (через внутренний интерфейс))
+- **Активы:** персональные данные (PII) — информация профиля пользователя (ФИО, e-mail, департамент, интересы); токены аутентификации (JWT) используются для верификации запросов и разграничения доступа; результаты поиска — агрегированные данные из внешних источников (Search Index API); метаданные пользователей и публикаций — хранятся в БД; логи и трассировка — данные об активности, для аудита и диагностики
+- **Зоны доверия:** Internet, Service (Internal - основные сервисы приложения: API Gateway, Search Service, Profile Service, Database), External Systems (интеграция с внешним Search Index API), Admin / Monitoring Zone (доступ к административной панели и логам)
 - **Context/DFD:**
 
 ```mermaid
@@ -57,8 +58,27 @@ flowchart LR
 ```
 
 
-- **Критичные интерфейсы и допущения:**
-  Internet — недоверенная зона; Gateway — публичный, проверка HTTPS/TTL; Admin — внутренняя зона; внешние интеграции через TLS; сервисы статeless; boundary между Internet и Internal через GW.
+**Критичные интерфейсы и допущения:**
+- Доверенные компоненты:
+  - API Gateway, Search Service, Profile Service и Database — размещены в одной внутренней защищённой сети.
+  - Коммуникации между внутренними сервисами проходят по защищённому каналу (TLS, mTLS).
+  - Авторизация реализована через внутренний RBAC (NFR-009).
+
+- Недоверенные компоненты:
+  - Клиентский браузер и внешние интеграции (Search Index API).
+  - Все входящие запросы из Internet требуют валидации токена и проверки лимитов.
+
+- Внешние интеграции:
+  - Search Service → Search Index API — ограниченный канал к внешней системе, с политикой retry/timeout/circuit breaker (NFR-005).
+  - Все ответы валидируются схемой JSON и журналируются.
+
+- Админ-доступ:
+  - Разрешён только из внутренней сети через VPN и MFA.
+  - Используются отдельные роли и ключи доступа, операции логируются (NFR-010).
+
+- Граница доверия (Trust Boundary):
+  - Проходит между Internet и Service, на уровне API Gateway.
+  - Вторая граница — между Service и External Systems, где требуется дополнительная проверка TLS-сертификатов и контроль ошибок.
 
 ---
 
@@ -66,15 +86,15 @@ flowchart LR
 
 | Risk ID | Source (DFD/Row) | Consolidated Description | Threat (S/T/R/I/D/E) | NFR link (ID) | L (1-5) | Rationale-L | I (1-5) | Rationale-I | **Score (=L×I)** | Decision (Top-5?) | ADR candidate |
 | ------- | ---------------- | ------------------------ | -------------------- | ------------- | ------: | ----------- | ------: | ----------- | ---------------: | ----------------- | ------------- |
-| **R-01** | Internet → API Gateway | Кража или повторное использование JWT-токена (replay/stolen token) из-за компрометации клиента или слабой проверки TTL. | **S** | need NFR (→ NFR-011) | 4 | Публичный интерфейс, частая цель атак; возможен фишинг или XSS. | 5 | Компрометация учётных записей и доступ к PII. | **20** | **Top-1** | `JWT TTL+Refresh` |
+| **R-01** | Internet → API Gateway | Кража или повторное использование JWT-токена (replay/stolen token) из-за компрометации клиента или слабой проверки TTL. | **S** | need NFR | 4 | Публичный интерфейс, частая цель атак; возможен фишинг или XSS. | 5 | Компрометация учётных записей и доступ к PII. | **20** | **Top-1** | `JWT TTL+Refresh` |
 | **R-02** | Logs / Services / API | Утечка PII (email, phone, user_id) в логах или ошибках, особенно при исключениях. | **I** | **NFR-007** | 4 | Частая ошибка логирования, возможна даже при debug-уровне. | 4 | Нарушение GDPR/конфиденциальности, возможны санкции. | **16** | **Top-2** | `PII Masking` |
 | **R-03** | API Gateway ↔ Services | Отсутствие или неправильная авторизация — доступ к чужим профилям (horizontal privilege escalation). | **E** | **NFR-009** | 3 | Сценарий возможен при ошибке в middleware. | 5 | Нарушение приватности, доступ к чужим данным. | **15** | **Top-3** | `RBAC isolation` |
 | **R-04** | Services → DB | SQL-инъекции или некорректная валидация входных данных, приводящая к порче данных. | **T** | **NFR-008** | 3 | Средний риск при ошибках в ORM или ручных запросах. | 4 | Нарушение целостности БД, утечки данных. | **12** | **Top-4** | `Parametrized Queries + Validation` |
 | **R-05** | API ↔ External Search API | Долгие или зависшие внешние запросы приводят к истощению потоков (DoS). | **D** | **NFR-005** | 3 | Внешние зависимости, нестабильный API. | 4 | Замедление работы сервиса, деградация поиска. | **12** | **Top-5** | `Circuit Breaker + Timeout` |
 | **R-06** | API Gateway | Отсутствие трассировки корреляции запросов — невозможно расследовать инциденты. | **R** | **NFR-006**, **NFR-010** | 2 | Возможен при ошибках логирования. | 2 | Усложняет аудит, но не влияет напрямую на безопасность. | **4** | — | `Correlation-ID logging` |
-| **R-07** | Database | Отсутствие аудита DML-операций (insert/update/delete). | **R** | need NFR (→ NFR-013) | 2 | Проблема организационного уровня. | 3 | Потеря трассируемости изменений. | **6** | — | `DB Audit Trail` |
+| **R-07** | Database | Отсутствие аудита DML-операций (insert/update/delete). | **R** | need NFR | 2 | Проблема организационного уровня. | 3 | Потеря трассируемости изменений. | **6** | — | `DB Audit Trail` |
 | **R-08** | API Gateway | Перегрузка запросами без лимитов, вызывающая отказ в обслуживании. | **D** | **NFR-004** | 3 | Публичная поверхность, возможен спам/скриптинг. | 3 | Замедление отклика или временная недоступность. | **9** | — | `Rate Limiting` |
-| **R-09** | External API Response | Ответ от внешнего API содержит неожиданные данные или PII. | **I** | need NFR (→ NFR-012) | 2 | Реже встречается, но возможен при слабой валидации схем. | 3 | Потенциальная утечка чужих данных. | **6** | — | `External Response Sanitization` |
+| **R-09** | External API Response | Ответ от внешнего API содержит неожиданные данные или PII. | **I** | need NFR | 2 | Реже встречается, но возможен при слабой валидации схем. | 3 | Потенциальная утечка чужих данных. | **6** | — | `External Response Sanitization` |
 | **R-10** | Search Service / Load | Высокая нагрузка на индекс замедляет SLA. | **D** | **NFR-003** | 3 | Вероятно при пиках нагрузки. | 2 | Влияет на UX, но не на безопасность. | **6** | — | `Autoscaling + SLO monitor` |
 
 ---
@@ -93,76 +113,97 @@ flowchart LR
 
 ## 4) Требования (S03) и ADR-решения (S05) под Top-5 (TM4)
 
-### NFR-1. Аутентификация и защита токенов
-
-- **AC (GWT):**
-  - **Given** валидный токен, **When** запрос `/api/...`, **Then** `200` и `X-User-Id=subject`.
-  - **Given** просроченный/поддельный токен, **When** запрос, **Then** `401` и событие `auth.token_invalid` в аудите.
-
-### NFR-2. Лимиты и таймауты
-
-- **AC (GWT):** rate-limit ≤ **N** rps/uid и ≤ **M** rps/ip; timeout ≤ **T** сек; при превышении - `429` + событие `rate_limit_hit`.
-
-### NFR-3. Аудит критических операций
-
-- **AC (GWT):** логируется `correlation_id`, uid, время и результат для операций (`login`, `role_change`, `data_export`, …).
-
-> TODO: при необходимости добавьте свои NFR под Top-5.
+| ID | Risk | User Story / Feature | Category | Requirement (NFR) | Rationale / Risk | Acceptance (G-W-T) | Evidence (test/log/scan/policy) | Trace (issue/link) | Owner | Status | Priority    | Severity   | Tags |
+| -- | ---- | -------------------- | -------- | ----------------- | ---------------- | ------------------ | ------------------------------- | ------------------ | ----- | ------ | ----------- | ---------- | ---- |
+| NFR-005 | R-05 (Top-5) | As a user I want to search by field/tags to find relevant results | Timeouts/Retry/CircuitBreaker | Outbound calls to Search Index API: timeout ≤ 2s, retry ≤ 3 with jitter; circuit-breaker on errors ≥50% over 1 min | Ensuring resilience to temporary unavailability or degradation of search index. Protection from cascading failures. Risk: request hanging and resource exhaustion | **Given** Search Index API unavailable or responding with delay >2s<br>**When** service calls it to process GET /api/search<br>**Then** total wait ≤ 8s; no more than 3 retry attempts with jitter; circuit breaker activates after 50% error threshold over 1 min | HTTP client config; resilience test; circuit breaker logs | #127 | team-backend | Draft | P2 - Medium | S2 - Major | resilience,timeout,retry,circuit-breaker |
+| NFR-007 | R-02 (Top-2) | As a user I want to edit profile to maintain current data | Privacy/PII | PII fields (email, phone) masked in logs; raw PII data in DB deleted/anonymized after 90 days of account deactivation | Privacy compliance (GDPR, CCPA) and reducing confidential data leakage risk through system logs | **Given** DTO with email user@example.com<br>**When** this object is logged<br>**Then** PII fields masked; retention plan exists and applied within 90 days | PII masking test; retention policy documentation | #129 | team-backend, team-security | Draft | P1 - High | S2 - Major | privacy,pii,compliance,gdpr |
+| NFR-008 | R-04 (Top-4) | As a user I want to edit profile to maintain current data | Data-Integrity | All SQL queries use parameterized queries; string fields normalized to NFC, phones to E.164, dates to UTC | SQL injection protection and data integrity assurance. Eliminating ambiguities in comparison and search | **Given** input data: name="Café", phone="8 (900) 123-45-67"<br>**When** PUT /api/profile executed<br>**Then** DB stores normalized values and uses parameterized statements | Code review; canonicalization tests; ORM/validator settings | #130 | team-backend | Draft | P1 - High | S2 - Major | security,sql-injection,canonicalization,data-quality |
+| NFR-009 | R-03 (Top-3) | As a user I want to edit profile to maintain current data | Security-AuthZ/RBAC | User can read and modify only own profile. Access strictly by user_id from authenticated session | Least privilege principle and user-level data isolation. Risk: horizontal privilege escalation | **Given** user with ID=123<br>**When** tries to access GET /api/profile/456<br>**Then** returns 404 Not Found | Isolation integration test; authorization middleware code | #131 | team-backend | Draft | P1 - High | S1 - Critical | security,authorization,rbac,data-isolation |
 
 ---
 
 ### Краткие ADR (минимум 2) - архитектурные решения S05
 
-(карточки короткие, по делу)
+#### ADR-001 - JWT TTL + Refresh + Rotation
 
-#### ADR-001 - TODO: название
+- **Context (угрозы/NFR):**  
+  - T01 — Token reuse / stolen JWT on public edge (R-01, Score=20); NFR-011; контур AUTH.
+  - DFD: Edge Internet → API (JWT).
+  - Assumptions: single gateway, stateless services, HTTPS-only.  
+- **Decision:** Внедрить политику короткоживущих JWT (TTL=15 мин) с refresh (TTL=30 дней) и ротацией ключей через JWKS (`kid` включён). Logout/blacklist по событию. 
+- **Trade-offs (кратко):** 
+  + Минимизация окна атаки при краже токена.  
+  − Усложнение управления refresh-токенами, чувствительность к clock skew. 
+- **DoD (готовность):**
+  - При истекшем токене → `401` (RFC7807).  
+  - При валидном refresh → новый токен с обновлённым `exp`.  
+  - `correlation_id` в логах, без PII.  
+  - Unit+integration тесты пройдены; не найдено JWT в репозитории.  
+- **Owner:** Team-A / Security Lead.
+- **Evidence (план/факт):** `EVIDENCE/dast-auth-2025-10-11.pdf#token-tests`  
 
-- **Context (угрозы/NFR):** T01, NFR-1; контур AUTH
-- **Decision:** что делаем и где (напр., проверка подписи токена в GW; короткий TTL; rotatable keys)
-- **Trade-offs (кратко):** стоимость/производительность/UX
-- **DoD (готовность):** измеримые условия (см. раздел 6)
-- **Owner:** ФИО/роль
-- **Evidence (план/факт):** EVIDENCE/dast-auth-YYYY-MM-DD.pdf#token-tests
+#### ADR-002 - PII Masking + Data Retention  
 
-#### ADR-002 - TODO: название
-
-- **Context:** T05, NFR-2; публичные endpoint’ы
-- **Decision:** rate-limit на GW + server-side timeouts; backpressure
-- **Trade-offs:** возможные 429 и влияние на UX
-- **DoD:** срабатывание 429 при >N rps; p95 ≤ T сек
-- **Owner:** ФИО/роль
-- **Evidence (план/факт):** EVIDENCE/load-after.png
+- **Context:**
+  - Risk: R-02 “PII exposure in logs” (L=4, I=4, Score=16)  
+  - DFD: Node Service → Logs (Profile Service, Search Service)  
+  - NFR: NFR-007  
+  - Assumptions: structured JSON logging; все PII поля определены; политика хранения ≤90 дней; соответствие GDPR/CCPA.  
+- **Decision:** Внедрить middleware для маскировки PII в логах и настройку политики хранения для raw PII. Цель — предотвратить утечку конфиденциальных данных и обеспечить соответствие требованиям приватности.  
+- **Trade-offs:**
+  + Снижение риска утечек и соответствие GDPR/CCPA  
+  − Меньше деталей для отладки; дополнительная нагрузка на логирование  
+- **DoD:**
+  - DTO с PII логируется → поля маскированы/удалены  
+  - Retention policy применена  
+  - JSON логи содержат `correlation_id`, без raw PII  
+  - Unit+integration тесты пройдены; SLO: ≤90 дней хранения, 0 утечек 
+- **Owner:** Team-Backend / Security Engineer
+- **Evidence (план/факт):** `EVIDENCE/logs-privacy-2025-10-11.pdf#pii-mask-tests`  
 
 ---
 
 ## 5) Трассировка Threat → NFR → ADR → (План)Проверки (TM5)
 
-| Threat | NFR   | ADR     | Чем проверяем (план/факт)                                                                 |
-|-------:|-------|---------|-------------------------------------------------------------------------------------------|
-| T01    | NFR-1 | ADR-001 | DAST auth-flow; аудит `auth.token_invalid` → EVIDENCE/dast-auth-YYYY-MM-DD.pdf / audit-sample.txt |
-| T05    | NFR-2 | ADR-002 | Нагрузочный тест + проверка 429/таймаутов → EVIDENCE/load-after.png                       |
-| T04    | NFR-X | ADR-00X | SAST/линтер на инъекции/параметризацию → EVIDENCE/sast-YYYY-MM-DD.pdf#sql-1              |
-| T03    | NFR-3 | ADR-00Y | Анализ образцов аудита → EVIDENCE/audit-sample.txt#corrid                                |
-
-> TODO: заполните таблицу для ваших Top-5; верификация может быть «планом», позже артефакты появятся в DV/DS.
+| Threat | Risk | NFR   | ADR     | Чем проверяем (план/факт)                                                                 |
+|-------:|-------|-------|---------|-------------------------------------------------------------------------------------------|
+| T01    | R-01 | Need NFR | ADR-001 — *JWT TTL + Refresh + Rotation* | DAST auth-flow; аудит `auth.token_invalid` → EVIDENCE/dast-auth-YYYY-MM-DD.pdf / audit-sample.txt |
+| T02    | R-02 | NFR-007 | ADR-002 — *PII Masking + Data Retention* | Unit+integration тесты на маскирование, e2e лог-валидация → `EVIDENCE/logs-privacy-2025-10-11.pdf#pii-mask-tests`                       |
+| T03    | R-03 | NFR-009 | ADR-00X — *RBAC Isolation* | Анализ образцов аудита доступа и ролей → `EVIDENCE/audit-sample.txt#rbac-checks`              |
+| T04    | R-04 | NFR-008 | ADR-00Y — *Parametrized Queries + Validation* | SAST/линтер на инъекции и параметризацию → `EVIDENCE/sast-2025-10-11.pdf#sql-1`                                |
+| T05    | R-05 | NFR-005 | ADR-00Z — *Circuit Breaker + Timeout* | Нагрузочный тест + проверка 429/таймаутов → `EVIDENCE/load-after.png`                                |
 
 ---
 
 ## 6) План проверок (мост в DV/DS)
 
-- **SAST/Secrets/SCA:** TODO: инструменты и куда положите отчёты в `EVIDENCE/`
-- **SBOM:** TODO: генератор/формат
-- **DAST (если применимо):** TODO: стенд/URL; профиль
-- **Примечание:** на этапе TM допустимы черновые планы/ссылки; финальные отчёты появятся в **DV/DS**.
+- **SAST / Secrets / SCA:**  
+  Инструменты: `GitHub Advanced Security (CodeQL)`, `Trivy`, `gitleaks`.  
+  Цель — статический анализ уязвимостей, поиск секретов и зависимостей с CVE.  
+  Отчёты: сохраняются в `EVIDENCE/sast-2025-10-11.pdf`, `EVIDENCE/secrets-scan.txt`, `EVIDENCE/sca-report.json`.
+
+- **SBOM:**  
+  Генератор: `Syft` (Anchore).  
+  Формат: `CycloneDX JSON`.  
+  Отчёт: `EVIDENCE/sbom-cyclonedx.json`.
+
+- **DAST (если применимо):**  
+  Инструмент: `OWASP ZAP` в headless-режиме.  
+  Профиль: `auth-flow + search endpoints`, включая сценарии `/api/auth`, `/api/profile`, `/api/search`.  
+  Отчёт: `EVIDENCE/dast-auth-2025-10-11.pdf`.
+
+- **Примечание:**  
+  На этапе **Threat Modeling (TM)** допустимы черновые планы и ссылки.  
+  Финальные отчёты, результаты сканирований и артефакты проверок будут добавлены на этапах **DV (Design Validation)** и **DS (Design Sign-off)**.
 
 ---
 
 ## 7) Самопроверка по рубрике TM (0/1/2)
 
-- **TM1. Архитектура и границы доверия:** [ ] 0 [ ] 1 [ ] 2  
-- **TM2. Покрытие STRIDE и уместность угроз:** [ ] 0 [ ] 1 [ ] 2  
-- **TM3. Приоритизация и Top-5:** [ ] 0 [ ] 1 [ ] 2  
-- **TM4. NFR + ADR под Top-5:** [ ] 0 [ ] 1 [ ] 2  
-- **TM5. Трассировка → (план)проверок:** [ ] 0 [ ] 1 [ ] 2  
+- **TM1. Архитектура и границы доверия:** [ ] 0 [ ] 1 [+] 2  
+- **TM2. Покрытие STRIDE и уместность угроз:** [ ] 0 [ ] 1 [+] 2  
+- **TM3. Приоритизация и Top-5:** [ ] 0 [ ] 1 [+] 2  
+- **TM4. NFR + ADR под Top-5:** [ ] 0 [ ] 1 [+] 2  
+- **TM5. Трассировка → (план)проверок:** [ ] 0 [ ] 1 [+] 2  
 
-**Итог TM (сумма):** __/10
+**Итог TM (сумма):** 10/10
