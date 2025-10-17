@@ -8,9 +8,9 @@
 
 ## 0) Мета
 
-- **Проект (опционально BYO):** TODO: ссылка / «учебный шаблон»
-- **Версия (commit/date):** TODO: abc123 / YYYY-MM-DD
-- **Кратко (1-2 предложения):** TODO: что именно собираем/тестируем/пакуем
+- **Проект:** учебный шаблон (https://github.com/Bquaith/secdev-2025)
+- **Версия (commit/date):** 1.0.0 / 2025-10-17
+- **Кратко (1-2 предложения):** Это веб-приложение на FastAPI с тестами на безопасность, где собираем и отображаем данные о пользователях и объектах, проверяем защиту от XSS и SQL-инъекций, и пакуем проект с отчётами тестов, логами и патчами.
 
 ---
 
@@ -18,24 +18,30 @@
 
 - **Одна команда для сборки/тестов:**
 
-  ```bash
-  # TODO: замените на ваш one-liner
-  make build test
-  ```
-
-  _Если без Makefile: укажите последовательность команд._
+```bash
+  python3 -m venv venv && source venv/bin/activate && pip install -r requirements.txt && python -m pytest tests/ -v --junitxml=EVIDENCE/S06/test-report.xml
+```
 
 - **Версии инструментов (фиксация):**
 
   ```bash
-  # TODO: примеры - удалите лишнее
-  python --version
-  pip freeze > EVIDENCE/pip-freeze.txt
-  node --version
-  npm ci --version
+  python --3.9.6
+  fastapi==0.115.0
+  jinja2==3.1.4
+  pydantic==2.9.2
+  pytest==8.3.2
+  httpx==0.27.2
   ```
 
-- **Описание шагов (кратко):** TODO: 2-4 пункта как запустить локально
+- **Описание шагов (кратко):** 
+1. Установите Python 3.9+ и выполните one-liner команду из паспорта:
+
+```bash
+   python3 -m venv venv && source venv/bin/activate && pip install -r requirements.txt && python -m pytest tests/ -v --junitxml=EVIDENCE/S06/test-report.xml
+```
+
+2. One-liner автоматически создаст виртуальное окружение, установит зависимости и запустит тесты безопасности
+3. Проверьте отчет тестов в EVIDENCE/S06/test-report.xml - все тесты должны быть зелеными
 
 ---
 
