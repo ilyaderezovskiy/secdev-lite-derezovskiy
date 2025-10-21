@@ -22,6 +22,9 @@
   python3 -m venv venv && source venv/bin/activate && pip install -r requirements.txt && python -m pytest tests/ -v --junitxml=EVIDENCE/S06/test-report.xml
 ```
 
+- **Локальный запуск:**
+  - Для локального запуска достаточно вызвать команду `make compose`, которая запустит docker-образ версии указанной в [docker-compose.yml](https://github.com/Bquaith/secdev-2025/blob/main/docker-compose.yml) - в текущей версии latest версию
+
 - **Версии инструментов (фиксация):**
 
   ```bash
