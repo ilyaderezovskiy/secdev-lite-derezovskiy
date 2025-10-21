@@ -47,17 +47,14 @@
 
 ## 2) Контейнеризация (DV2)
 
-- **Dockerfile:** TODO: `path/to/Dockerfile` (база, multi-stage? минимальный образ?)
 - **Dockerfile:** [Dockerfile]([https://github.com/2gury/secdev-seed-s06-s08/blob/main/Dockerfile](https://github.com/Bquaith/secdev-2025/blob/main/Dockerfile)) ./Dockerfile — базовый образ python:3.11-slim, non-root appuser, переменная DB_PATH=/home/appuser/data/app.db, uvicorn app.main:app, минимальный образ (slim)
+- 
 - **Сборка/запуск локально:**
 
   ```bash
   docker build -t app:local .
   docker run --rm -p 8080:8080 app:local
   ```
-
-- **(Опционально) docker-compose:** [Docker-compose](https://github.com/Bquaith/secdev-2025/blob/main/Dockerfile). Healthcheck: exec‑form, проверяет доступность порта 8000 внутри контейнера. ./docker-compose.yml — сервис app, порты 8080:8000, именованный том dbdata:/home/appuser/data (персистентная SQLite), переменные окружения из .env.
-
 
 - **Docker-compose:** [Docker-compose](https://github.com/Bquaith/secdev-2025/blob/main/docker-compose.yml). Healthcheck: exec‑form, проверяет HTTP-доступность порта 8000 внутри контейнера каждые 10 секунд. ./docker-compose.yml — сервис app, порты 8080:8000 - автоматически перезапускается, имя контейнера: seed, переменные окружения из .env.
 
@@ -83,8 +80,8 @@ web - основное приложение:
 
 ## 3) CI: базовый pipeline и стабильный прогон (DV3)
 
-- **Платформа CI:** TODO: GitHub Actions / GitLab CI / другое
-- **Файл конфига CI:** TODO: путь (напр., `.github/workflows/ci.yml`)
+- **Платформа CI:** GitHub Actions
+- **Файл конфига CI:** https://github.com/Bquaith/secdev-2025/blob/main/.github/workflows/ci.yml
 - **Стадии (минимум):** checkout → deps → **build** → **test** (артефакты выгружаются в отдельных экшенах)
 - **Фрагмент конфигурации (ключевые шаги):**
 
@@ -107,21 +104,24 @@ web - основное приложение:
 
   ```
 
-- **Стабильность:** TODO: последние N запусков зелёные? краткий комментарий
-- **Ссылка/копия лога прогона:** `EVIDENCE/ci-YYYY-MM-DD-build.txt`
+- **Стабильность:** последние 3 запуска зелёные; кэш pip сработал.
+- **Ссылка/копия лога прогона:**  
+  - [ci_run.png](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S08/ci_run.png)
+  - [ci_tests_run.png](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S08/ci_tests_run.png)
+  - [GitHub Actions (Project repo)](https://github.com/Bquaith/secdev-2025/actions)
 
 ---
 
 ## 4) Артефакты и логи конвейера (DV4)
 
-_Сложите файлы в `/EVIDENCE/` и подпишите их назначение._
 
 | Артефакт/лог                    | Путь в `EVIDENCE/`            | Комментарий                                  |
 |---------------------------------|-------------------------------|----------------------------------------------|
-| Лог успешной сборки/тестов (CI) | `ci-YYYY-MM-DD-build.txt`     | ключевые шаги/время                          |
-| Локальный лог сборки (опц.)     | `local-build-YYYY-MM-DD.txt`  | для сверки                                   |
-| Описание результата сборки      | `package-notes.txt`           | какой образ/wheel/архив получился            |
-| Freeze/версии инструментов      | `pip-freeze.txt` (или аналог) | воспроизводимость окружения                  |
+| Лог успешной сборки/тестов (CI) | [S08/ci_tests_run.png](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S08/ci_tests_run.png)     | Все 18 тестов пройдены. Время выполнения: 20 секунд |
+| Локальный лог сборки (опц.)     | [S06/screenshots/Running tests locally.png](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S06/screenshots/Running%20tests%20locally.png)  | Все 10 тестов пройдены - система демонстрирует хорошую защиту |
+| Описание результата сборки      | [S07/build.log] | Образ: secdev-seed:latest. Размер: 229MB. Собран на: 2025-10-20. Базовый образ: python:3.11-slim. Пользователь: appuser (non-root). Порты: 8000. Healthcheck: [настроен](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S07/health.json) |
+| Freeze/версии инструментов      | [S06/requirements.txt](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S06/requirements.txt) | Версии зафиксированы - воспроизводимость обеспечена |
+| Отчёт тестов                    | [S06/test-report.xml](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S06/test-report.xml) | 0 ошибок, 0 провалов, 0 пропущенных тестов. Все тесты за 0.33 секунды |
 
 ---
 
@@ -160,15 +160,14 @@ _Сложите файлы в `/EVIDENCE/` и подпишите их назна
 
 ## 6) Индекс артефактов DV
 
-_Чтобы преподаватель быстро сверил файлы._
 
 | Тип     | Файл в `EVIDENCE/`            | Дата/время         | Коммит/версия | Runner/OS    |
 |---------|--------------------------------|--------------------|---------------|--------------|
-| CI-лог  | `ci-YYYY-MM-DD-build.txt`      | `YYYY-MM-DD hh:mm` | `abc123`      | `gha-ubuntu` |
-| Лок.лог | `local-build-YYYY-MM-DD.txt`   | …                  | `abc123`      | `local`      |
-| Package | `package-notes.txt`            | …                  | `abc123`      | -            |
-| Freeze  | `pip-freeze.txt` (или аналог)  | …                  | `abc123`      | -            |
-| Grep    | `grep-secrets.txt`             | …                  | `abc123`      | -            |
+| CI-лог  | [S08/ci_tests_run.png](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S08/ci_tests_run.png) , [ci_run.png](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S08/ci_run.png) | `2025-10-21` | v01.00.00      | `gha-ubuntu` |
+| Лок.лог | [S06/screenshots/Running tests locally.png](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S06/screenshots/Running%20tests%20locally.png) | `2025-10-17` | v01.00.00 | `local` |
+| Package | `package-notes.txt`            | …                  | v01.00.00      | -            |
+| Freeze  | [S06/requirements.txt](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S06/requirements.txt)  | `2025-10-17` | v01.00.00 | - |
+| Grep    | `grep-secrets.txt`             | …                  | v01.00.00      | -            |
 
 ---
 
