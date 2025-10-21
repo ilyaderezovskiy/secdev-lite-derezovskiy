@@ -1,0 +1,122 @@
+2025-10-21T16:52:44+02:00 Install deps START
+Collecting fastapi==0.115.0 (from -r requirements.txt (line 2))
+  Using cached fastapi-0.115.0-py3-none-any.whl.metadata (27 kB)
+Collecting uvicorn==0.30.1 (from -r requirements.txt (line 3))
+  Using cached uvicorn-0.30.1-py3-none-any.whl.metadata (6.3 kB)
+Collecting jinja2==3.1.4 (from -r requirements.txt (line 4))
+  Using cached jinja2-3.1.4-py3-none-any.whl.metadata (2.6 kB)
+Collecting pydantic==2.9.2 (from -r requirements.txt (line 5))
+  Using cached pydantic-2.9.2-py3-none-any.whl.metadata (149 kB)
+Collecting pytest==8.3.2 (from -r requirements.txt (line 6))
+  Using cached pytest-8.3.2-py3-none-any.whl.metadata (7.5 kB)
+Collecting httpx==0.27.2 (from -r requirements.txt (line 7))
+  Using cached httpx-0.27.2-py3-none-any.whl.metadata (7.1 kB)
+Collecting starlette<0.39.0,>=0.37.2 (from fastapi==0.115.0->-r requirements.txt (line 2))
+  Using cached starlette-0.38.6-py3-none-any.whl.metadata (6.0 kB)
+Collecting typing-extensions>=4.8.0 (from fastapi==0.115.0->-r requirements.txt (line 2))
+  Using cached typing_extensions-4.15.0-py3-none-any.whl.metadata (3.3 kB)
+Collecting annotated-types>=0.6.0 (from pydantic==2.9.2->-r requirements.txt (line 5))
+  Using cached annotated_types-0.7.0-py3-none-any.whl.metadata (15 kB)
+Collecting pydantic-core==2.23.4 (from pydantic==2.9.2->-r requirements.txt (line 5))
+  Using cached pydantic_core-2.23.4-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (6.6 kB)
+Collecting click>=7.0 (from uvicorn==0.30.1->-r requirements.txt (line 3))
+  Using cached click-8.3.0-py3-none-any.whl.metadata (2.6 kB)
+Collecting h11>=0.8 (from uvicorn==0.30.1->-r requirements.txt (line 3))
+  Using cached h11-0.16.0-py3-none-any.whl.metadata (8.3 kB)
+Collecting MarkupSafe>=2.0 (from jinja2==3.1.4->-r requirements.txt (line 4))
+  Using cached markupsafe-3.0.3-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (2.7 kB)
+Collecting iniconfig (from pytest==8.3.2->-r requirements.txt (line 6))
+  Downloading iniconfig-2.3.0-py3-none-any.whl.metadata (2.5 kB)
+Collecting packaging (from pytest==8.3.2->-r requirements.txt (line 6))
+  Using cached packaging-25.0-py3-none-any.whl.metadata (3.3 kB)
+Collecting pluggy<2,>=1.5 (from pytest==8.3.2->-r requirements.txt (line 6))
+  Using cached pluggy-1.6.0-py3-none-any.whl.metadata (4.8 kB)
+Collecting anyio (from httpx==0.27.2->-r requirements.txt (line 7))
+  Using cached anyio-4.11.0-py3-none-any.whl.metadata (4.1 kB)
+Collecting certifi (from httpx==0.27.2->-r requirements.txt (line 7))
+  Using cached certifi-2025.10.5-py3-none-any.whl.metadata (2.5 kB)
+Collecting httpcore==1.* (from httpx==0.27.2->-r requirements.txt (line 7))
+  Using cached httpcore-1.0.9-py3-none-any.whl.metadata (21 kB)
+Collecting idna (from httpx==0.27.2->-r requirements.txt (line 7))
+  Using cached idna-3.11-py3-none-any.whl.metadata (8.4 kB)
+Collecting sniffio (from httpx==0.27.2->-r requirements.txt (line 7))
+  Using cached sniffio-1.3.1-py3-none-any.whl.metadata (3.9 kB)
+Using cached fastapi-0.115.0-py3-none-any.whl (94 kB)
+Using cached pydantic-2.9.2-py3-none-any.whl (434 kB)
+Using cached uvicorn-0.30.1-py3-none-any.whl (62 kB)
+Using cached jinja2-3.1.4-py3-none-any.whl (133 kB)
+Using cached pytest-8.3.2-py3-none-any.whl (341 kB)
+Using cached httpx-0.27.2-py3-none-any.whl (76 kB)
+Using cached pydantic_core-2.23.4-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (2.1 MB)
+Using cached httpcore-1.0.9-py3-none-any.whl (78 kB)
+Using cached pluggy-1.6.0-py3-none-any.whl (20 kB)
+Using cached starlette-0.38.6-py3-none-any.whl (71 kB)
+Using cached anyio-4.11.0-py3-none-any.whl (109 kB)
+Using cached annotated_types-0.7.0-py3-none-any.whl (13 kB)
+Using cached click-8.3.0-py3-none-any.whl (107 kB)
+Using cached h11-0.16.0-py3-none-any.whl (37 kB)
+Using cached idna-3.11-py3-none-any.whl (71 kB)
+Using cached markupsafe-3.0.3-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (22 kB)
+Using cached sniffio-1.3.1-py3-none-any.whl (10 kB)
+Using cached typing_extensions-4.15.0-py3-none-any.whl (44 kB)
+Using cached certifi-2025.10.5-py3-none-any.whl (163 kB)
+Downloading iniconfig-2.3.0-py3-none-any.whl (7.5 kB)
+Using cached packaging-25.0-py3-none-any.whl (66 kB)
+Installing collected packages: typing-extensions, sniffio, pluggy, packaging, MarkupSafe, iniconfig, idna, h11, click, certifi, annotated-types, uvicorn, pytest, pydantic-core, jinja2, httpcore, anyio, starlette, pydantic, httpx, fastapi
+
+Successfully installed MarkupSafe-3.0.3 annotated-types-0.7.0 anyio-4.11.0 certifi-2025.10.5 click-8.3.0 fastapi-0.115.0 h11-0.16.0 httpcore-1.0.9 httpx-0.27.2 idna-3.11 iniconfig-2.3.0 jinja2-3.1.4 packaging-25.0 pluggy-1.6.0 pydantic-2.9.2 pydantic-core-2.23.4 pytest-8.3.2 sniffio-1.3.1 starlette-0.38.6 typing-extensions-4.15.0 uvicorn-0.30.1
+Requirement already satisfied: pytest in /opt/hostedtoolcache/Python/3.11.13/x64/lib/python3.11/site-packages (8.3.2)
+Collecting pytest-cov
+  Downloading pytest_cov-7.0.0-py3-none-any.whl.metadata (31 kB)
+Collecting pytest-html
+  Downloading pytest_html-4.1.1-py3-none-any.whl.metadata (3.9 kB)
+Collecting coverage
+  Downloading coverage-7.11.0-cp311-cp311-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl.metadata (9.0 kB)
+Requirement already satisfied: iniconfig in /opt/hostedtoolcache/Python/3.11.13/x64/lib/python3.11/site-packages (from pytest) (2.3.0)
+Requirement already satisfied: packaging in /opt/hostedtoolcache/Python/3.11.13/x64/lib/python3.11/site-packages (from pytest) (25.0)
+Requirement already satisfied: pluggy<2,>=1.5 in /opt/hostedtoolcache/Python/3.11.13/x64/lib/python3.11/site-packages (from pytest) (1.6.0)
+Requirement already satisfied: jinja2>=3.0.0 in /opt/hostedtoolcache/Python/3.11.13/x64/lib/python3.11/site-packages (from pytest-html) (3.1.4)
+Collecting pytest-metadata>=2.0.0 (from pytest-html)
+  Downloading pytest_metadata-3.1.1-py3-none-any.whl.metadata (8.6 kB)
+Requirement already satisfied: MarkupSafe>=2.0 in /opt/hostedtoolcache/Python/3.11.13/x64/lib/python3.11/site-packages (from jinja2>=3.0.0->pytest-html) (3.0.3)
+Downloading pytest_cov-7.0.0-py3-none-any.whl (22 kB)
+Downloading pytest_html-4.1.1-py3-none-any.whl (23 kB)
+Downloading coverage-7.11.0-cp311-cp311-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (248 kB)
+Downloading pytest_metadata-3.1.1-py3-none-any.whl (11 kB)
+Installing collected packages: coverage, pytest-metadata, pytest-html, pytest-cov
+
+Successfully installed coverage-7.11.0 pytest-cov-7.0.0 pytest-html-4.1.1 pytest-metadata-3.1.1
+2025-10-21T16:52:52+02:00 Install deps END
+pip freeze saved
+2025-10-21T16:52:52+02:00 Init DB START
+DB initialized at /home/runner/work/secdev-2025/secdev-2025/app.db
+2025-10-21T16:52:52+02:00 Init DB END exit=0
+2025-10-21T16:52:52+02:00 Pytest START
+..........                                                               [100%]
+=============================== warnings summary ===============================
+tests/test_xss_escaping.py::test_echo_should_escape_script_tags
+tests/test_xss_escaping.py::test_img_onerror_not_executed
+tests/test_xss_escaping.py::test_xss_multiple_vectors_blocked
+tests/test_xss_escaping.py::test_xss_multiple_vectors_blocked
+tests/test_xss_escaping.py::test_xss_multiple_vectors_blocked
+tests/test_xss_escaping.py::test_xss_multiple_vectors_blocked
+tests/test_xss_escaping.py::test_safe_content_preserved
+tests/test_xss_escaping.py::test_safe_content_preserved
+tests/test_xss_escaping.py::test_safe_content_preserved
+  /opt/hostedtoolcache/Python/3.11.13/x64/lib/python3.11/site-packages/starlette/templating.py:161: DeprecationWarning: The `name` is not the first parameter anymore. The first parameter should be the `Request` instance.
+  Replace `TemplateResponse(name, {"request": request})` by `TemplateResponse(request, name)`.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+- generated xml file: /home/runner/work/secdev-2025/secdev-2025/EVIDENCE/S08/test-report.xml -
+================================ tests coverage ================================
+_______________ coverage: platform linux, python 3.11.13-final-0 _______________
+
+Coverage HTML written to dir EVIDENCE/coverage-html
+Coverage XML written to file EVIDENCE/coverage.xml
+- Generated html report: file:///home/runner/work/secdev-2025/secdev-2025/EVIDENCE/pytest-report.html -
+10 passed, 9 warnings in 0.96s
+2025-10-21T16:52:54+02:00 Pytest END exit=0
+2025-10-21T16:52:54+02:00 Collect package-notes START
+2025-10-21T16:52:54+02:00 Collect package-notes END
+grep saved: 17 lines
