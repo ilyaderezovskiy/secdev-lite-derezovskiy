@@ -48,6 +48,7 @@
 ## 2) Контейнеризация (DV2)
 
 - **Dockerfile:** TODO: `path/to/Dockerfile` (база, multi-stage? минимальный образ?)
+- **Dockerfile:** [Dockerfile]([https://github.com/2gury/secdev-seed-s06-s08/blob/main/Dockerfile](https://github.com/Bquaith/secdev-2025/blob/main/Dockerfile)) ./Dockerfile — базовый образ python:3.11-slim, non-root appuser, переменная DB_PATH=/home/appuser/data/app.db, uvicorn app.main:app, минимальный образ (slim)
 - **Сборка/запуск локально:**
 
   ```bash
@@ -55,17 +56,36 @@
   docker run --rm -p 8080:8080 app:local
   ```
 
-  _Укажите порт/команду/healthcheck, если есть._
+- **(Опционально) docker-compose:** [Docker-compose](https://github.com/Bquaith/secdev-2025/blob/main/Dockerfile). Healthcheck: exec‑form, проверяет доступность порта 8000 внутри контейнера. ./docker-compose.yml — сервис app, порты 8080:8000, именованный том dbdata:/home/appuser/data (персистентная SQLite), переменные окружения из .env.
 
-- **(Опционально) docker-compose:** `TODO: path/to/docker-compose.yml` - кратко, какие сервисы.
 
+- **Docker-compose:** [Docker-compose](https://github.com/Bquaith/secdev-2025/blob/main/docker-compose.yml). Healthcheck: exec‑form, проверяет HTTP-доступность порта 8000 внутри контейнера каждые 10 секунд. ./docker-compose.yml — сервис app, порты 8080:8000 - автоматически перезапускается, имя контейнера: seed, переменные окружения из .env.
+
+**Сервисы в docker-compose.yml:**
+
+web - основное приложение:
+
+- Собирается из текущей директории (Dockerfile), образ secdev-seed:latest
+
+- Пробрасывает порт 8000, автоматически перезапускается
+
+- Устанавливает переменные APP_NAME и DEBUG
+
+- Healthcheck - проверяет HTTP-доступность каждые 10 секунд
+
+- Безопасность - отключены все права, запрещены новые привилегии
+
+- Загружает переменные из .env файла
+
+- Имя контейнера: seed
+  
 ---
 
 ## 3) CI: базовый pipeline и стабильный прогон (DV3)
 
 - **Платформа CI:** TODO: GitHub Actions / GitLab CI / другое
 - **Файл конфига CI:** TODO: путь (напр., `.github/workflows/ci.yml`)
-- **Стадии (минимум):** checkout → deps → **build** → **test** → (package)
+- **Стадии (минимум):** checkout → deps → **build** → **test** (артефакты выгружаются в отдельных экшенах)
 - **Фрагмент конфигурации (ключевые шаги):**
 
   ```yaml
