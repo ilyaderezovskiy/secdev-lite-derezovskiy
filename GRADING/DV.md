@@ -82,29 +82,56 @@ web - основное приложение:
 
 - **Платформа CI:** GitHub Actions
 - **Файл конфига CI:** https://github.com/Bquaith/secdev-2025/blob/main/.github/workflows/ci.yml
-- **Стадии (минимум):** checkout → deps → **build** → **test** (артефакты выгружаются в отдельных экшенах)
+- **Стадии (минимум):** checkout → deps → setup → cache → deps → secrets read → pre-commit → init db → test → artifacts
 - **Фрагмент конфигурации (ключевые шаги):**
 
   ```yaml
-  # TODO: укоротите под себя
   jobs:
-  build_test:
+  build-test:
     runs-on: ubuntu-latest
+    env:
+      VAR_1: ${{ secrets.MY_SECRET_KEY }}
+      TZ: Europe/Berlin
+    
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with: { python-version: '3.11' }
-      - name: Cache deps
-        uses: actions/cache@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Show non-secret status
+        run: |
+          if [ -z "$VAR_1" ]; then
+            echo "VAR_1 is empty"
+            exit 1
+          else
+            echo "VAR_1 is set -> yes"
+          fi
+      - name: Explicitly mask secret (extra safety)
+        run: |
+          echo "::add-mask::$VAR_1"
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
-          path: ~/.cache/pip
-          key: pip-${{ hashFiles('**/requirements*.txt') }}
-      - run: pip install -r requirements.txt
-      - run: pytest -q
+          python-version: '3.11'
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pytest pytest-cov pytest-html coverage
+      - name: Initialize database
+        run: python scripts/init_db.py
+      ...
+      - name: Run security tests
+        run: |
+          pytest -q \
+            --junitxml=EVIDENCE/S08/test-report.xml \
+            --html=EVIDENCE/pytest-report.html --self-contained-html \
+            --cov=. --cov-report=html:EVIDENCE/coverage-html --cov-report=xml:EVIDENCE/coverage.xml
+      - name: Security scan for secrets
+        run: |
+          git grep -nE 'AKIA|SECRET|api[_-]?key|token=|password=' > EVIDENCE/grep-secrets.txt || true
 
   ```
+  [Полная конфигурация](https://github.com/Bquaith/secdev-2025/blob/main/.github/workflows/ci.yml)
 
-- **Стабильность:** последние 3 запуска зелёные; кэш pip сработал.
+- **Стабильность:** последние 6 запусков зелёные; кэш pip сработал.
 - **Ссылка/копия лога прогона:**  
   - [ci_run.png](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S08/ci_run.png)
   - [ci_tests_run.png](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S08/ci_tests_run.png)
@@ -126,7 +153,7 @@ web - основное приложение:
 ---
 
 ## 5) Секреты и переменные окружения (DV5 - гигиена, без сканеров)
-§
+
 - **Шаблон окружения:**  
   [.env.example](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S07/.env.example)
   Секреты не коммитятся в git, есть проверка [S07/.pre-commit-config.yaml](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S07/pre-commit-config.yaml)
@@ -165,7 +192,6 @@ web - основное приложение:
 |---------|--------------------------------|--------------------|---------------|--------------|
 | CI-лог  | [S08/ci_tests_run.png](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S08/ci_tests_run.png) , [ci_run.png](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S08/ci_run.png) | `2025-10-21` | v01.00.00      | `gha-ubuntu` |
 | Лок.лог | [S06/screenshots/Running tests locally.png](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S06/screenshots/Running%20tests%20locally.png) | `2025-10-17` | v01.00.00 | `local` |
-| Package | `package-notes.txt`            | `2025-10-21` | v01.00.00      | -            |
 | Freeze  | [S06/requirements.txt](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S06/requirements.txt)  | `2025-10-17` | v01.00.00 | - |
 | Grep    | [S08/grep-secrets.txt](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S08/grep-secrets.txt) | `2025-10-21` | v01.00.00      | -            |
 
@@ -180,10 +206,10 @@ web - основное приложение:
 
 ## 8) Самооценка по рубрике DV (0/1/2)
 
-- **DV1. Воспроизводимость локальной сборки и тестов:** [ ] 0 [ ] 1 [ ] 2  
-- **DV2. Контейнеризация (Docker/Compose):** [ ] 0 [ ] 1 [ ] 2  
-- **DV3. CI: базовый pipeline и стабильный прогон:** [ ] 0 [ ] 1 [ ] 2  
-- **DV4. Артефакты и логи конвейера:** [ ] 0 [ ] 1 [ ] 2  
-- **DV5. Секреты и конфигурация окружения (гигиена):** [ ] 0 [ ] 1 [ ] 2  
+- **DV1. Воспроизводимость локальной сборки и тестов:** [ ] 0 [ ] 1 [+] 2  
+- **DV2. Контейнеризация (Docker/Compose):** [ ] 0 [ ] 1 [+] 2  
+- **DV3. CI: базовый pipeline и стабильный прогон:** [ ] 0 [ ] 1 [+] 2  
+- **DV4. Артефакты и логи конвейера:** [ ] 0 [ ] 1 [+] 2  
+- **DV5. Секреты и конфигурация окружения (гигиена):** [ ] 0 [ ] 1 [+] 2  
 
-**Итог DV (сумма):** __/10
+**Итог DV (сумма):** 10/10
