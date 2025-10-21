@@ -1,0 +1,63 @@
+#0 building with "desktop-linux" instance using docker driver
+
+#1 [web internal] load build definition from Dockerfile
+#1 transferring dockerfile: 1.20kB done
+#1 DONE 0.0s
+
+#2 [web internal] load metadata for docker.io/library/python:3.11-slim
+#2 DONE 0.5s
+
+#3 [web internal] load .dockerignore
+#3 transferring context: 211B done
+#3 DONE 0.0s
+
+#4 [web 1/7] FROM docker.io/library/python:3.11-slim@sha256:ff8533f48e12b705fc20d339fde2ec61d0b234dd9366bab3bc84d7b70a45c8c0
+#4 resolve docker.io/library/python:3.11-slim@sha256:ff8533f48e12b705fc20d339fde2ec61d0b234dd9366bab3bc84d7b70a45c8c0 0.0s done
+#4 DONE 0.1s
+
+#5 [web internal] load build context
+#5 transferring context: 1.20kB done
+#5 DONE 0.0s
+
+#6 [web 2/7] WORKDIR /app
+#6 CACHED
+
+#7 [web 3/7] COPY requirements.txt ./
+#7 CACHED
+
+#8 [web 4/7] RUN pip install --no-cache-dir -r requirements.txt
+#8 CACHED
+
+#9 [web 5/7] COPY app ./app
+#9 CACHED
+
+#10 [web 6/7] COPY scripts ./scripts
+#10 CACHED
+
+#11 [web 7/7] RUN useradd -m -u 10001 appuser && chown -R appuser:appuser /app
+#11 CACHED
+
+#12 [web] exporting to image
+#12 exporting layers done
+#12 exporting manifest sha256:545d78f6132afccd3d2cb51c6f6df70b91601d24ae67907d735567d77420ba70 done
+#12 exporting config sha256:e348c02d2b0b8ed6db137c1198df66cef6289c53d2698019cfba33b9c1feab85 done
+#12 exporting attestation manifest sha256:2e920700d54ead2a5e6750b642a7fb71a82352010c8df0c99a0964a24708d645 0.1s done
+#12 exporting manifest list sha256:f7a8fc956dd4445aa54067f75b8232c6b83ff513c695792c907bdc0a835ceb26
+#12 exporting manifest list sha256:f7a8fc956dd4445aa54067f75b8232c6b83ff513c695792c907bdc0a835ceb26 0.0s done
+#12 naming to docker.io/library/secdev-seed:latest done
+#12 unpacking to docker.io/library/secdev-seed:latest 0.0s done
+#12 DONE 0.2s
+
+#13 [web] resolving provenance for metadata file
+#13 DONE 0.0s
+[+] Running 2/2
+ ✔ web             Built0.0s 
+ ✔ Container seed  Healthy21.3s 
+
+2025-10-21 00:53:09 DB initialized at /app/app.db
+2025-10-21 00:53:19 INFO:     127.0.0.1:39896 - "GET / HTTP/1.1" 200 OK
+2025-10-21 00:53:09 INFO:     Started server process [8]
+2025-10-21 00:53:09 INFO:     Waiting for application startup.
+2025-10-21 00:53:09 INFO:     Application startup complete.
+2025-10-21 00:53:09 INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+2025-10-21 00:53:19 INFO:     127.0.0.1:55570 - "GET / HTTP/1.1" 200 OK
