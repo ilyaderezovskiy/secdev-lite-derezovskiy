@@ -48,7 +48,7 @@
 ## 2) Контейнеризация (DV2)
 
 - **Dockerfile:** [Dockerfile]([https://github.com/2gury/secdev-seed-s06-s08/blob/main/Dockerfile](https://github.com/Bquaith/secdev-2025/blob/main/Dockerfile)) ./Dockerfile — базовый образ python:3.11-slim, non-root appuser, переменная DB_PATH=/home/appuser/data/app.db, uvicorn app.main:app, минимальный образ (slim)
-- 
+  
 - **Сборка/запуск локально:**
 
   ```bash
@@ -119,42 +119,42 @@ web - основное приложение:
 |---------------------------------|-------------------------------|----------------------------------------------|
 | Лог успешной сборки/тестов (CI) | [S08/ci_tests_run.png](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S08/ci_tests_run.png)     | Все 18 тестов пройдены. Время выполнения: 20 секунд |
 | Локальный лог сборки (опц.)     | [S06/screenshots/Running tests locally.png](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S06/screenshots/Running%20tests%20locally.png)  | Все 10 тестов пройдены - система демонстрирует хорошую защиту |
-| Описание результата сборки      | [S07/build.log] | Образ: secdev-seed:latest. Размер: 229MB. Собран на: 2025-10-20. Базовый образ: python:3.11-slim. Пользователь: appuser (non-root). Порты: 8000. Healthcheck: [настроен](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S07/health.json) |
+| Описание результата сборки      | [S07/build.log](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S07/build.log) | Образ: secdev-seed:latest. Размер: 229MB. Собран на: 2025-10-20. Базовый образ: python:3.11-slim. Пользователь: appuser (non-root). Порты: 8000. Healthcheck: [настроен](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S07/health.json) |
 | Freeze/версии инструментов      | [S06/requirements.txt](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S06/requirements.txt) | Версии зафиксированы - воспроизводимость обеспечена |
 | Отчёт тестов                    | [S06/test-report.xml](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S06/test-report.xml) | 0 ошибок, 0 провалов, 0 пропущенных тестов. Все тесты за 0.33 секунды |
 
 ---
 
 ## 5) Секреты и переменные окружения (DV5 - гигиена, без сканеров)
-
-- **Шаблон окружения:** добавлен файл `/.env.example` со списком переменных (без значений), например:
-  - `REG_USER=`
-  - `REG_PASS=`
-  - `API_TOKEN=`
-- **Хранение и передача в CI:**  
-  - секреты лежат в настройках репозитория/организации (**masked**),  
-  - в pipeline они **не печатаются** в явном виде.
+§
+- **Шаблон окружения:**  
+  [.env.example](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S07/.env.example)
+  Секреты не коммитятся в git, есть проверка [S07/.pre-commit-config.yaml](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S07/pre-commit-config.yaml)
+  
+- **Хранение и передача в CI:**
+  - Секреты проверяются в [S07/.pre-commit-config.yaml](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S07/pre-commit-config.yaml)  
+  - На CI проводится проверка на токены в коде [S08/secrets_ci.png](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S08/secrets_ci.png)
+  - В логе CI не печатаются значения (`::add-mask::`) [S08/secrets_ci.png](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S08/secrets_ci.png)
+  - в pipeline они **не печатаются** в явном виде
+  
 - **Пример использования секрета в job (адаптируйте):**
 
   ```yaml
-  - name: Login to registry (masked)
-    env:
-      REG_USER: ${{ secrets.REG_USER }}
-      REG_PASS: ${{ secrets.REG_PASS }}
-    run: |
-      echo "::add-mask::$REG_PASS"
-      echo "$REG_PASS" | docker login -u "$REG_USER" --password-stdin registry.example.com
+  - name: Explicitly mask secret
+        env:
+            VAR_1: ${{ secrets.MY_SECRET_KEY }}
+            TZ: Europe/Berlin
+        run: |
+          echo "::add-mask::$VAR_1"
   ```
 
 - **Быстрая проверка отсутствия секретов в коде (любой простой способ):**
 
   ```bash
-  # пример: поиск популярных паттернов
-  git grep -nE 'AKIA|SECRET|token=|password=' || true
+  git grep -nE -o 'AKIA|SECRET|api[_-]?key|api[_-]?token|token=|password=|passwd|MY_SECRET_KEY|VAR_1' > EVIDENCE/grep-secrets.txt || true
   ```
-
-  _Сохраните вывод в `EVIDENCE/grep-secrets.txt`._
-- **Памятка по ротации:** TODO: кто/как меняет secrets при утечке/ревоке токена.
+  
+- **Памятка по ротации:** [SECURITY.md](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S08/SECURITY.md)
 
 ---
 
@@ -165,9 +165,9 @@ web - основное приложение:
 |---------|--------------------------------|--------------------|---------------|--------------|
 | CI-лог  | [S08/ci_tests_run.png](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S08/ci_tests_run.png) , [ci_run.png](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S08/ci_run.png) | `2025-10-21` | v01.00.00      | `gha-ubuntu` |
 | Лок.лог | [S06/screenshots/Running tests locally.png](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S06/screenshots/Running%20tests%20locally.png) | `2025-10-17` | v01.00.00 | `local` |
-| Package | `package-notes.txt`            | …                  | v01.00.00      | -            |
+| Package | `package-notes.txt`            | `2025-10-21` | v01.00.00      | -            |
 | Freeze  | [S06/requirements.txt](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S06/requirements.txt)  | `2025-10-17` | v01.00.00 | - |
-| Grep    | `grep-secrets.txt`             | …                  | v01.00.00      | -            |
+| Grep    | [S08/grep-secrets.txt](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S08/grep-secrets.txt) | `2025-10-21` | v01.00.00      | -            |
 
 ---
 
