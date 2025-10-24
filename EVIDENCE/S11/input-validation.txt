@@ -1,0 +1,9 @@
+# app/main.py - экранирование пользовательского ввода
+from html import escape
+
+app = FastAPI()
+
+@app.get("/echo", response_class=HTMLResponse)
+def echo(x: str = ""):
+    safe_x = escape(x)  # Валидация и санитизация
+    return HTMLResponse(f"<h1>ECHO</h1><div>you said: {safe_x}</div>")
