@@ -20,16 +20,26 @@
 - **Как запускал:**
 
   ```bash
-  syft dir:. -o cyclonedx-json > EVIDENCE/sbom-2024-06-15.json
-  grype sbom:EVIDENCE/sbom-2024-06-15.json --fail-on high -o json > EVIDENCE/deps-2024-06-15.json
+  syft dir:. -o cyclonedx-json > EVIDENCE/S09/sbom.json
+  grype sbom:/work/EVIDENCE/S09/sbom.json --fail-on high -o json > EVIDENCE/S09/sca_report.json
   ```
 
-- **Отчёты:** [`EVIDENCE/09/sbom.json`](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S09/sbom.json), [`EVIDENCE/09/sca_report.json`]([sca_report.json](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S09/sca_report.json)), [`EVIDENCE/09/sca_summary.md`]([sca_summary.md](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S09/sca_summary.md))
+- **Отчёты:** [`EVIDENCE/09/sbom.json`](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S09/sbom.json), [`EVIDENCE/09/sca_report.json`](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S09/sca_report.json), [`EVIDENCE/09/sca_summary.md`](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S09/sca_summary.md)
 - **Actions:** [ссылка на успешный job](https://github.com/ilyaderezovskiy/secdev-seed-s09-s12/actions/runs/18783223550)
 - **Выводы (кратко):** 
   - Найдено: 0 Critical, 0 High, 3 Medium уязвимостей
   - Состояние: отсутствуют критические и высокие уязвимости
-- **Действия:** Обновления не требуются - отсутствуют High/Critical уязвимости
+- **Действия:** Обновить версию Jinja2 в [requirements.txt](https://github.com/ilyaderezovskiy/secdev-seed-s09-s12/blob/main/requirements.txt)
+  
+   ```bash
+  jinja2==3.1.4 -> jinja2==3.1.6
+  ```
+- **Выводы после исправления (кратко):** 
+  - Найдено: 0 уязвимостей
+  - Состояние: отсутствуют
+  - [`EVIDENCE/09/sca_report_after.json`](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S09/sca_report_after.json)
+  - [ссылка на успешный job](https://github.com/ilyaderezovskiy/secdev-seed-s09-s12/actions/runs/18794105977)
+
 - **Гейт по зависимостям:** Critical=0; High=0
 
 ---
@@ -42,8 +52,7 @@
 - **Как запускал:**
 
   ```bash
-  semgrep --config p/ci --severity=high --error --json --output EVIDENCE/sast-2024-06-15.json
-  semgrep --config auto --sarif --output EVIDENCE/sast-2024-06-15.sarif
+  semgrep --config auto --sarif --output EVIDENCE/S10/semgrep.sarif
   ```
 
 - **Actions:** [ссылка на успешный job](https://github.com/ilyaderezovskiy/secdev-seed-s09-s12/actions/runs/18783590408)
@@ -59,8 +68,8 @@
 - **Как запускал:**
 
   ```bash
-  gitleaks detect --no-git --report-format json --report-path EVIDENCE/secrets-2024-06-15.json
-  gitleaks detect --log-opts="--all" --report-format json --report-path EVIDENCE/secrets-2024-06-15-history.json
+  gitleaks detect --no-git --report-format json --report-path EVIDENCE/S10/gitleaks.json
+  gitleaks detect --log-opts="--all" --report-format json --report-path EVIDENCE/S10/gitleaks-history.json
   ```
 
 - **Actions:** [ссылка на успешный job](https://github.com/ilyaderezovskiy/secdev-seed-s09-s12/actions/runs/18783590408)
@@ -77,30 +86,141 @@
 
 ### Вариант A - DAST (лайт)
 
-- **Инструмент/таргет:** TODO (локальный стенд/демо-контейнер допустим)
+- **Инструмент/таргет:** zap
 - **Как запускал:**
 
   ```bash
   zap-baseline.py -t http://127.0.0.1:8080 -m 3 \
-    -r EVIDENCE/dast-YYYY-MM-DD.html -J EVIDENCE/dast-YYYY-MM-DD.json
+    -r EVIDENCE/S11/zap_baseline.html -J EVIDENCE/S11/zap_baseline.json
+  ```
+  
+- **Отчёт:** [`EVIDENCE/S11/zap_baseline.html`](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S11/zap_baseline.html), [`EVIDENCE/S11/zap_baseline.json-d.json`](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S11/zap_baseline.json-d.json)
+- **Выводы:** 
+
+  1. **Проблема:** Missing Anti-clickjacking Header (Medium ×4)
+  
+  **Риск:** Возможность встраивания приложения во фреймы на вредоносных сайтах
+
+  **Детали:** Отсутствуют заголовки X-Frame-Options и Content-Security-Policy с директивой frame-ancestors
+
+  **Решение:** В [main.py](https://github.com/ilyaderezovskiy/secdev-seed-s09-s12/blob/main/app/main.py) добавлены security headers middleware
+
+  ```bash
+  class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request, call_next):
+        response = await call_next(request)
+        
+        # Security headers
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-XSS-Protection"] = "1; mode=block"
+        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+        response.headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self' 'unsafe-inline'"
+        response.headers["Permissions-Policy"] = "camera=(), microphone=(), location=()"
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        
+        # Cache control for sensitive endpoints
+        if request.url.path in ["/", "/echo", "/?q="]:
+            response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+            response.headers["Pragma"] = "no-cache"
+            response.headers["Expires"] = "0"
+        
+        return response
   ```
 
-- **Отчёт:** `EVIDENCE/dast-YYYY-MM-DD.pdf#alert-...`
-- **Выводы:** TODO: 1-2 meaningful наблюдения
+ **Отчёт после изменений:** [`EVIDENCE/S11/zap_baseline_after.html`](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S11/zap_baseline_after.html), [`EVIDENCE/S11/zap_baseline_after.json-d.json`](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S11/zap_baseline_after.json-d.json)
+  
+  **Результат:**
+  
+  - Исчезли: Clickjacking, X-Content-Type, основные CSP ошибки
+  
+  - Появилось: "Non-Storable Content" - значит cache-control заголовки работают
+  
+  - Риски снижены: с 8 предупреждений до 3
+
+  2. **Проблема:** User Controllable HTML Element Attribute (Informational ×1)
+  
+  **Риск:** Возможность внедрения скриптов через параметр 'q'
+
+  **Детали:** Пользовательский ввод напрямую попадает в value атрибут input элемента
+
+  **Пример:** http://localhost:8080/?q=ZAP -> `<input value="zap">`
+
+  - Content Security Policy не настроен (Medium ×4)
+  - X-Content-Type-Options отсутствует (Low ×5)
+  - Кэширование чувствительного контента (Informational ×8)
 
 ### Вариант B - Policy / Container / IaC
 
-- **Инструмент(ы):** TODO (trivy config / checkov / conftest и т.п.)
+- **Инструмент(ы):** checkov
 - **Как запускал:**
 
   ```bash
-  trivy image --severity HIGH,CRITICAL --exit-code 1 <image:tag> > EVIDENCE/policy-YYYY-MM-DD.txt
-  trivy config . --severity HIGH,CRITICAL --exit-code 1 --format table > EVIDENCE/trivy-YYYY-MM-DD.txt
-  checkov -d . -o cli > EVIDENCE/checkov-YYYY-MM-DD.txt
+  checkov -d . -o cli > EVIDENCE/S12/checkov.json
   ```
 
-- **Отчёт(ы):** `EVIDENCE/policy-YYYY-MM-DD.txt`, `EVIDENCE/trivy-YYYY-MM-DD.txt`, …
-- **Выводы:** TODO: какие правила нарушены/исправлены
+- **Отчёт(ы):** [`EVIDENCE/S12/checkov.json`](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S12/checkov.json), [`EVIDENCE/S12/hadolint.json`](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S12/hadolint.json)
+- **Выводы:**
+  - Высокий риск компрометации
+  - Потенциальное воздействие на кластер
+
+- **Исправления:**
+  1. Запуск от non-root пользователя
+     
+  Было: runAsUser: 0 (root)
+  
+  Стало: runAsUser: 1001 + runAsNonRoot: true
+  
+  Эффект: Устранен риск привилегированной эксплуатации контейнера
+
+  3. Использование фиксированного тега образа
+  
+  Было: s09s12-app:latest
+
+  Стало: s09s12-app:v1.2.3
+
+  Эффект: Гарантирована воспроизводимость и предотвращены неожиданные обновления
+
+  4. Блокировка эскалации привилегий
+  
+  Было: Не указано (разрешено по умолчанию)
+
+  Стало: allowPrivilegeEscalation: false
+
+  Эффект: Заблокированы попытки повышения привилегий внутри контейнера
+
+  5. Удаление Linux capabilities
+  
+  Было: Все capabilities доступны
+
+  Стало: capabilities: drop: ["ALL"]
+
+  Эффект: Радикальное сокращение поверхности атаки
+
+  6. Включение seccomp профиля
+  
+  Было: Не указано
+
+  Стало: seccompProfile: type: RuntimeDefault
+
+  Эффект: Ограничение системных вызовов на уровне ядра
+
+  7. Установка лимитов ресурсов
+  
+  Было: resources: {} (без ограничений)
+
+  Стало: Четко определенные requests/limits
+
+  - CPU: requests 100m, limits 200m
+
+  - Memory: requests 64Mi, limits 128Mi
+
+  Эффект: Предотвращение истощения ресурсов узла и обеспечение стабильности
+
+- **Выводы после исправления:**
+  - Все проверки пройдены успешно - из 82 проверок безопасности для Kubernetes 82 PASSED, 0 FAILED. Все критически важные аспекты защищены: изоляция, ограничение прав, управление ресурсами и безопасность образов.
+
+- **Actions:** [ссылка на успешный job](https://github.com/ilyaderezovskiy/secdev-seed-s09-s12/actions/runs/18794221901)
 
 ---
 
@@ -108,13 +228,13 @@
 
 Отметьте **реально применённые** меры, приложите доказательства из `EVIDENCE/`.
 
-- [ ] **Контейнер non-root / drop capabilities** → Evidence: `EVIDENCE/policy-YYYY-MM-DD.txt#no-root`
+- [+] **Контейнер non-root / drop capabilities** → Evidence: [`EVIDENCE/S12/non-root_IaC.txt`](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S12/non-root_IaC.txt)
 - [ ] **Rate-limit / timeouts / retry budget** → Evidence: `EVIDENCE/load-after.png`
-- [ ] **Input validation** (типы/длины/allowlist) → Evidence: `EVIDENCE/sast-YYYY-MM-DD.*#input`
-- [ ] **Secrets handling** (нет секретов в git; хранилище секретов) → Evidence: `EVIDENCE/secrets-YYYY-MM-DD.*`
-- [ ] **HTTP security headers / CSP / HTTPS-only** → Evidence: `EVIDENCE/security-headers.txt`
+- [+] **Input validation** (типы/длины/allowlist) → Evidence: [`EVIDENCE/S11/input-validation.txt`](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S11/input-validation.txt)
+- [ ] **Secrets handling** (нет секретов в git; хранилище секретов) → Evidence: 
+- [+] **HTTP security headers / CSP / HTTPS-only** → Evidence: [`EVIDENCE/S11/secrets_handling.txt`](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S11/security-headers.txt)
 - [ ] **AuthZ / RLS / tenant isolation** → Evidence: `EVIDENCE/rls-policy.txt`
-- [ ] **Container/IaC best-practice** (минимальная база, readonly fs, …) → Evidence: `EVIDENCE/trivy-YYYY-MM-DD.txt#cfg`
+- [+] **Container/IaC best-practice** (минимальная база, readonly fs, …) → [`EVIDENCE/S12/non-root_IaC.txt`](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S12/non-root_IaC.txt)
 
 > Для «1» достаточно ≥2 уместных мер с доказательствами; для «2» - ≥3 и хотя бы по одной показать эффект «до/после».
 
@@ -183,10 +303,10 @@
 
 ## 10) Самооценка по рубрике DS (0/1/2)
 
-- **DS1. SBOM и SCA:** [ ] 0 [ ] 1 [ ] 2  
-- **DS2. SAST + Secrets:** [ ] 0 [ ] 1 [ ] 2  
-- **DS3. DAST или Policy (Container/IaC):** [ ] 0 [ ] 1 [ ] 2  
-- **DS4. Харднинг (доказуемый):** [ ] 0 [ ] 1 [ ] 2  
+- **DS1. SBOM и SCA:** [ ] 0 [ ] 1 [+] 2  
+- **DS2. SAST + Secrets:** [ ] 0 [+] 1 [ ] 2  
+- **DS3. DAST или Policy (Container/IaC):** [ ] 0 [ ] 1 [+] 2  
+- **DS4. Харднинг (доказуемый):** [ ] 0 [ ] 1 [+] 2  
 - **DS5. Quality-gates, триаж и «до/после»:** [ ] 0 [ ] 1 [ ] 2  
 
 **Итог DS (сумма):** __/10
