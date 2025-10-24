@@ -24,7 +24,8 @@
   grype sbom:EVIDENCE/sbom-2024-06-15.json --fail-on high -o json > EVIDENCE/deps-2024-06-15.json
   ```
 
-- **Отчёты:** [`EVIDENCE/09/sbom.json`](), [`EVIDENCE/09/sca_report.json`](sca_report.json), [`EVIDENCE/09/sca_summary.md`](sca_summary.md)
+- **Отчёты:** [`EVIDENCE/09/sbom.json`](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S09/sbom.json), [`EVIDENCE/09/sca_report.json`]([sca_report.json](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S09/sca_report.json)), [`EVIDENCE/09/sca_summary.md`]([sca_summary.md](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S09/sca_summary.md))
+- **Actions:** [ссылка на успешный job](https://github.com/ilyaderezovskiy/secdev-seed-s09-s12/actions/runs/18783223550)
 - **Выводы (кратко):** 
   - Найдено: 0 Critical, 0 High, 3 Medium уязвимостей
   - Состояние: отсутствуют критические и высокие уязвимости
@@ -37,28 +38,36 @@
 
 ### 2.1 SAST
 
-- **Инструмент/профиль:** TODO: semgrep?
+- **Инструмент/профиль:** semgrep
 - **Как запускал:**
 
   ```bash
-  semgrep --config p/ci --severity=high --error --json --output EVIDENCE/sast-YYYY-MM-DD.json
+  semgrep --config p/ci --severity=high --error --json --output EVIDENCE/sast-2024-06-15.json
+  semgrep --config auto --sarif --output EVIDENCE/sast-2024-06-15.sarif
   ```
 
-- **Отчёт:** `EVIDENCE/sast-YYYY-MM-DD.*`
-- **Выводы:** TODO: 1-2 ключевых находки (TP/FP), области риска
+- **Actions:** [ссылка на успешный job](https://github.com/ilyaderezovskiy/secdev-seed-s09-s12/actions/runs/18783590408)
+- **Отчёт:** [`EVIDENCE/S10/semgrep.sarif`](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S10/semgrep.sarif)
+- **Выводы:** 
+  - Результат: 0 предупреждений - код не содержит выявляемых статических уязвимостей
+  - Качество кода соответствует стандартам безопасности по проверяемым правилам
+  - Ложные срабатывания отсутствуют
 
 ### 2.2 Secrets scanning
 
-- **Инструмент:** TODO: gitleaks?
+- **Инструмент:** gitleaks
 - **Как запускал:**
 
   ```bash
-  gitleaks detect --no-git --report-format json --report-path EVIDENCE/secrets-YYYY-MM-DD.json
-  gitleaks detect --log-opts="--all" --report-format json --report-path EVIDENCE/secrets-YYYY-MM-DD-history.json
+  gitleaks detect --no-git --report-format json --report-path EVIDENCE/secrets-2024-06-15.json
+  gitleaks detect --log-opts="--all" --report-format json --report-path EVIDENCE/secrets-2024-06-15-history.json
   ```
 
-- **Отчёт:** `EVIDENCE/secrets-YYYY-MM-DD.*`
-- **Выводы:** TODO: есть ли истинные срабатывания; меры (ревок/ротация/очистка истории)
+- **Actions:** [ссылка на успешный job](https://github.com/ilyaderezovskiy/secdev-seed-s09-s12/actions/runs/18783590408)
+- **Отчёт:** [`EVIDENCE/S10/gitleaks.json`](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S10/gitleaks.json)
+- **Выводы:** 
+  - Результат: 0 находок - в коде и истории коммитов не обнаружено секретов
+  - Меры: дополнительные действия не требуются, состояние соответствует политике безопасности
 
 ---
 
