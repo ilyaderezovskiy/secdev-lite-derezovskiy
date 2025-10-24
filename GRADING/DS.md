@@ -8,26 +8,28 @@
 
 ## 0) Мета
 
-- **Проект (опционально BYO):** TODO: ссылка / «учебный шаблон»
-- **Версия (commit/date):** TODO: abc123 / YYYY-MM-DD
+- **Проект (опционально BYO):** учебный шаблон (https://github.com/ilyaderezovskiy/secdev-seed-s09-s12)
+- **Версия (commit/date):** 1.0.0 / 2025-10-17
 - **Кратко (1-2 предложения):** TODO: что сканируется и какие меры харднинга планируются
 
 ---
 
 ## 1) SBOM и уязвимости зависимостей (DS1)
 
-- **Инструмент/формат:** TODO: Syft/Grype/OSV; CycloneDX/SPDX
+- **Инструмент/формат:** Syft/Grype; CycloneDX JSON
 - **Как запускал:**
 
   ```bash
-  syft dir:. -o cyclonedx-json > EVIDENCE/sbom-YYYY-MM-DD.json
-  grype sbom:EVIDENCE/sbom-YYYY-MM-DD.json --fail-on high -o json > EVIDENCE/deps-YYYY-MM-DD.json
+  syft dir:. -o cyclonedx-json > EVIDENCE/sbom-2024-06-15.json
+  grype sbom:EVIDENCE/sbom-2024-06-15.json --fail-on high -o json > EVIDENCE/deps-2024-06-15.json
   ```
 
-- **Отчёты:** `EVIDENCE/sbom-YYYY-MM-DD.json`, `EVIDENCE/deps-YYYY-MM-DD.json`
-- **Выводы (кратко):** TODO: сколько Critical/High, ключевые пакеты/лицензии
-- **Действия:** TODO: что исправлено/обновлено **или** что временно подавлено (ниже в триаже)
-- **Гейт по зависимостям:** TODO: правило в словах (например, «Critical=0; High≤1»)
+- **Отчёты:** [`EVIDENCE/09/sbom.json`](), [`EVIDENCE/09/sca_report.json`](sca_report.json), [`EVIDENCE/09/sca_summary.md`](sca_summary.md)
+- **Выводы (кратко):** 
+  - Найдено: 0 Critical, 0 High, 3 Medium уязвимостей
+  - Состояние: отсутствуют критические и высокие уязвимости
+- **Действия:** Обновления не требуются - отсутствуют High/Critical уязвимости
+- **Гейт по зависимостям:** Critical=0; High=0
 
 ---
 
