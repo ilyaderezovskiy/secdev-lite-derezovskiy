@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: s09s12-web
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: s09s12-web }
+  template:
+    metadata:
+      labels: { app: s09s12-web }
+    spec:
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: web
+          image: s09s12-app:v1.2.3
+          ports: [{ containerPort: 8080 }]
+          securityContext:
+            runAsUser: 1001
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "100m"
+            limits:
+              memory: "128Mi"
+              cpu: "200m"
