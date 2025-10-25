@@ -10,7 +10,7 @@
 
 - **Проект (опционально BYO):** учебный шаблон (https://github.com/ilyaderezovskiy/secdev-seed-s09-s12)
 - **Версия (commit/date):** 1.0.0 / 2025-10-17
-- **Кратко (1-2 предложения):** TODO: что сканируется и какие меры харднинга планируются
+- **Кратко (1-2 предложения):** SAST, Secrets, SCA, SBOM и пассивный DAST для проверки кода, зависимостей и базовых security headers
 
 ---
 
@@ -161,8 +161,8 @@
 
 - **Отчёт(ы):** [`EVIDENCE/S12/checkov.json`](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S12/checkov.json), [`EVIDENCE/S12/hadolint.json`](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S12/hadolint.json)
 - **Выводы:**
-  - Высокий риск компрометации
-  - Потенциальное воздействие на кластер
+  - НЕ ПРОЙДЕНО: 17 проверок
+  - Наиболее критичны запуск от root, отсутствие ограничений ресурсов и health checks
 
 - **Исправления:**
   1. Запуск от non-root пользователя
@@ -219,6 +219,8 @@
 
 - **Выводы после исправления:**
   - Все проверки пройдены успешно - из 82 проверок безопасности для Kubernetes 82 PASSED, 0 FAILED. Все критически важные аспекты защищены: изоляция, ограничение прав, управление ресурсами и безопасность образов.
+ 
+- **Отчёт(ы) после исправления:** [`EVIDENCE/S12/checkov_after.json`](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S12/checkov_after.json), [`EVIDENCE/S12/hadolint_after.json`](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S12/hadolint_after.json)
 
 - **Actions:** [ссылка на успешный job](https://github.com/ilyaderezovskiy/secdev-seed-s09-s12/actions/runs/18794221901)
 
@@ -281,10 +283,10 @@
 
 | Контроль/Мера | Метрика                 | До   | После | Evidence (до), (после)                          |
 |---------------|-------------------------|-----:|------:|-------------------------------------------------|
-| Зависимости   | #Critical / #High (SCA) | TODO | 0 / ≤1| `EVIDENCE/deps-before.json`, `deps-after.json`  |
-| SAST          | #Critical / #High       | TODO | 0 / ≤1| `EVIDENCE/sast-before.*`, `sast-after.*`        |
-| Secrets       | Истинные находки        | TODO | 0     | `EVIDENCE/secrets-*.json`                       |
-| Policy/IaC    | Violations              | TODO | 0     | `EVIDENCE/checkov-before.txt`, `checkov-after.txt` |
+| Зависимости   | #Critical / #High (SCA) | Medium: 3 | Medium: 0 | [`EVIDENCE/S09/sca_summary.md`](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S09/sca_summary.md), [`EVIDENCE/S09/sca_summary_after.md`](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S09/sca_summary_after.md)  |
+| SAST          | #Critical / #High       | Low: 19 | Low: 10 | [`EVIDENCE/S11/zap_baseline.html`](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S11/zap_baseline.html), [`EVIDENCE/S11/zap_baseline_after.html`](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S11/zap_baseline_after.html)        |
+| Secrets       | Истинные находки        | 0 | 0     | [`EVIDENCE/S10/gitleaks.json`](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S10/gitleaks.json)                       |
+| Policy/IaC    | Violations              | 17 | 0     | `EVIDENCE/checkov-before.txt`, `checkov-after.txt` |
 
 ---
 
