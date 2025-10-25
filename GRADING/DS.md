@@ -37,7 +37,7 @@
 - **Выводы после исправления (кратко):** 
   - Найдено: 0 уязвимостей
   - Состояние: отсутствуют
-  - [`EVIDENCE/09/sca_report_after.json`](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S09/sca_report_after.json)
+  - [`EVIDENCE/09/sca_summary_after.md`](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S09/sca_summary_after.md)
   - [ссылка на успешный job](https://github.com/ilyaderezovskiy/secdev-seed-s09-s12/actions/runs/18794105977)
 
 - **Гейт по зависимостям:** Critical=0; High=0
