@@ -245,37 +245,55 @@
 ## 5) Quality-gates и проверка порогов (DS5)
 
 - **Пороговые правила (словами):**  
-  Примеры: «SCA: Critical=0; High≤1», «SAST: Critical=0», «Secrets: 0 истинных находок», «Policy: Violations=0».
+
+  - SCA: Critical=0; High≤1; Medium≤3
+  - SAST: Critical=0; High=0
+  - Secrets: Gitleaks length=0
+  - DAST: Critical=0; High=0; Medium≤2
+  - Policy/IaC: Critical=0; High=0
+ 
 - **Как проверяются:**  
-  - Ручной просмотр (какие файлы/строки) **или**  
-  - Автоматически:  (скрипт/job, условие fail при нарушении)
+  Ручной просмотр:
+    
+  - SCA: EVIDENCE/S09/sca_summary_after.md - просмотр severity counts
+  - SAST: EVIDENCE/S10/semgrep.sarif - проверка массива results
+  - Secrets: EVIDENCE/S10/gitleaks.json - проверка пустого массива
+  - DAST: EVIDENCE/S11/zap_baseline_after.html - таблица Summary of Alerts
+  - Policy/IaC: EVIDENCE/S12/checkov_after.json - проверка failed_checks
+    
+  Автоматически:  (скрипт/job, условие fail при нарушении)
 
     ```bash
-    SCA: grype ... --fail-on high
-    SAST: semgrep --config p/ci --severity=high --error
-    Secrets: gitleaks detect --exit-code 1
-    Policy/IaC: trivy (image|config) --severity HIGH,CRITICAL --exit-code 1
-    DAST: zap-baseline.py -m 3 (фейл при High)
+    # SCA
+    grype sbom:EVIDENCE/S09/sbom.json --fail-on high -o json
+
+    # SAST  
+    semgrep --config p/ci --severity=high --error --json
+    
+    # Secrets
+    gitleaks detect --no-git --exit-code 1 --report-format json
+    
+    # DAST
+    zap-baseline.py -t http://localhost:8080 -m 3 -I  # Fail on High
+    
+    # Policy/IaC
+    checkov --directory . --framework terraform --fail-on HIGH
     ```
 
 - **Ссылки на конфиг/скрипт (если есть):**
 
-  ```bash
-  GitHub Actions: .github/workflows/security.yml (jobs: sca, sast, secrets, policy, dast)
-  или GitLab CI: .gitlab-ci.yml (stages: security; jobs: sca/sast/secrets/policy/dast)
-  ```
+  Пороговые проверки встроены в GitHub Actions workflow проекта, выполняются вручную/при пуше/на PR [.github/workflows](https://github.com/ilyaderezovskiy/secdev-seed-s09-s12/tree/main/.github/workflows)
 
 ---
 
 ## 6) Триаж-лог (fixed / suppressed / open)
 
-| ID/Anchor       | Класс     | Severity | Статус     | Действие | Evidence                               | Ссылка на фикс/исключение         | Комментарий / owner / expiry |
-|-----------------|-----------|----------|------------|----------|----------------------------------------|-----------------------------------|------------------------------|
-| CVE-2024-XXXX   | SCA       | High     | fixed      | bump     | `EVIDENCE/deps-YYYY-MM-DD.json#CVE`    | `commit abc123`                   | -                            |
-| ZAP-123         | DAST      | Medium   | suppressed | ignore   | `EVIDENCE/dast-YYYY-MM-DD.pdf#123`     | `EVIDENCE/suppressions.yml#zap`   | FP; owner: ФИО; expiry: 2025-12-31 |
-| SAST-77         | SAST      | High     | open       | backlog  | `EVIDENCE/sast-YYYY-MM-DD.*#77`        | issue-link                        | план фикса в релизе N        |
-
-> Для «2» по DS5 обязательно указывать **owner/expiry/обоснование** для подавлений.
+| Класс     | Severity | Статус     | Действие | Evidence                               | Ссылка на фикс/исключение         | Комментарий / owner / expiry |
+|-----------|----------|------------|----------|----------------------------------------|-----------------------------------|------------------------------|
+| SCA       | Medium     | fixed      | bump     | [`EVIDENCE/S09/sca_summary_after.md`](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S09/sca_summary_after.md)     | [requirements.txt](https://github.com/ilyaderezovskiy/secdev-seed-s09-s12/blob/main/requirements.txt) | Обновление для sandbox escape фикса, attr filter bypass исправлен |
+| DAST      | Medium   | fixed | security headers   | [`EVIDENCE/S11/zap_baseline_after.html`](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S11/zap_baseline_after.html) | [app/main.py](https://github.com/ilyaderezovskiy/secdev-seed-s09-s12/blob/main/app/main.py) | Добавлен CSP header, добавлен X-Frame-Options: DENY |
+| SAST      | Medium | fixed | input validation  | [`EVIDENCE/S11/zap_baseline_after.html`](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S11/zap_baseline_after.html), [`EVIDENCE/S11/input-validation.txt`](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S11/input-validation.txt) | [app/main.py](https://github.com/ilyaderezovskiy/secdev-seed-s09-s12/blob/main/app/main.py) | Экранирование пользовательского ввода |
+| Policy/IaC      | Medium | fixed | hardening | [`EVIDENCE/S12/checkov_after.json`](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S12/checkov_after.json), [`EVIDENCE/S12/non-root_IaC.txt`](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S12/non-root_IaC.txt) | [k8s/deploy.yaml](https://github.com/ilyaderezovskiy/secdev-seed-s09-s12/blob/main/iac/k8s/deploy.yaml) | Добавлен non-root, dropped caps |
 
 ---
 
@@ -350,9 +368,9 @@
 ## 10) Самооценка по рубрике DS (0/1/2)
 
 - **DS1. SBOM и SCA:** [ ] 0 [ ] 1 [+] 2  
-- **DS2. SAST + Secrets:** [ ] 0 [+] 1 [ ] 2  
+- **DS2. SAST + Secrets:** [ ] 0 [ ] 1 [+] 2  
 - **DS3. DAST или Policy (Container/IaC):** [ ] 0 [ ] 1 [+] 2  
 - **DS4. Харднинг (доказуемый):** [ ] 0 [ ] 1 [+] 2  
-- **DS5. Quality-gates, триаж и «до/после»:** [ ] 0 [ ] 1 [ ] 2  
+- **DS5. Quality-gates, триаж и «до/после»:** [ ] 0 [ ] 1 [+] 2  
 
 **Итог DS (сумма):** __/10
