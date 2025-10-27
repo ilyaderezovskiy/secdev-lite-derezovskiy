@@ -9,7 +9,7 @@
 ## 0) Мета
 
 - **Проект (опционально BYO):** учебный шаблон (https://github.com/ilyaderezovskiy/secdev-seed-s09-s12)
-- **Версия (commit/date):** 1.0.0 / 2025-10-17
+- **Версия (commit/date):** 1.0.0 / 2025-10-27
 - **Кратко (1-2 предложения):** SAST, Secrets, SCA, SBOM и пассивный DAST для проверки кода, зависимостей и базовых security headers
 
 ---
@@ -233,7 +233,8 @@
 - [x] **Контейнер non-root / drop capabilities** → Evidence: [`EVIDENCE/S12/non-root_IaC.txt`](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S12/non-root_IaC.txt)
 - [ ] **Rate-limit / timeouts / retry budget** → Evidence: `EVIDENCE/load-after.png`
 - [x] **Input validation** (типы/длины/allowlist) → Evidence: [`EVIDENCE/S11/input-validation.txt`](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S11/input-validation.txt)
-- [ ] **Secrets handling** (нет секретов в git; хранилище секретов) → Evidence: 
+- [x] **Secrets handling** (нет секретов в git; хранилище секретов) → Evidence: [`EVIDENCE/S10/gitleaks.json`](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S10/gitleaks.json), [`EVIDENCE/S10/semgrep.sarif
+`](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S10/semgrep.sarif)
 - [x] **HTTP security headers / CSP / HTTPS-only** → Evidence: [`EVIDENCE/S11/secrets_handling.txt`](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S11/security-headers.txt)
 - [ ] **AuthZ / RLS / tenant isolation** → Evidence: `EVIDENCE/rls-policy.txt`
 - [x] **Container/IaC best-practice** (минимальная база, readonly fs, …) → [`EVIDENCE/S12/non-root_IaC.txt`](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S12/non-root_IaC.txt)
@@ -291,7 +292,7 @@
 | Класс     | Severity | Статус     | Действие | Evidence                               | Ссылка на фикс/исключение         | Комментарий / owner / expiry |
 |-----------|----------|------------|----------|----------------------------------------|-----------------------------------|------------------------------|
 | SCA       | Medium     | fixed      | bump     | [`EVIDENCE/S09/sca_summary_after.md`](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S09/sca_summary_after.md)     | [requirements.txt](https://github.com/ilyaderezovskiy/secdev-seed-s09-s12/blob/main/requirements.txt) | Обновление для sandbox escape фикса, attr filter bypass исправлен |
-| DAST      | Medium   | fixed | security headers   | [`EVIDENCE/S11/zap_baseline_after.html`](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S11/zap_baseline_after.html) | [app/main.py](https://github.com/ilyaderezovskiy/secdev-seed-s09-s12/blob/main/app/main.py) | Добавлен CSP header, добавлен X-Frame-Options: DENY |
+| DAST      | Medium   | fixed | security headers   | [`EVIDENCE/S11/zap_baseline_after.html`](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S11/zap_baseline_after.html), [`EVIDENCE/S11/secrets_handling.txt`](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S11/security-headers.txt) | [app/main.py](https://github.com/ilyaderezovskiy/secdev-seed-s09-s12/blob/main/app/main.py) | Добавлен CSP header, добавлен X-Frame-Options: DENY |
 | SAST      | Medium | fixed | input validation  | [`EVIDENCE/S11/zap_baseline_after.html`](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S11/zap_baseline_after.html), [`EVIDENCE/S11/input-validation.txt`](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S11/input-validation.txt) | [app/main.py](https://github.com/ilyaderezovskiy/secdev-seed-s09-s12/blob/main/app/main.py) | Экранирование пользовательского ввода |
 | Policy/IaC      | Medium | fixed | hardening | [`EVIDENCE/S12/checkov_after.json`](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S12/checkov_after.json), [`EVIDENCE/S12/non-root_IaC.txt`](https://github.com/ilyaderezovskiy/secdev-lite-derezovskiy/blob/main/EVIDENCE/S12/non-root_IaC.txt) | [k8s/deploy.yaml](https://github.com/ilyaderezovskiy/secdev-seed-s09-s12/blob/main/iac/k8s/deploy.yaml) | Добавлен non-root, dropped caps |
 
